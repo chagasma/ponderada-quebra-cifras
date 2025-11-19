@@ -1,0 +1,16 @@
+# Dependências para quebra de cifras de substituição
+# Python 3.8+
+
+# Não são necessárias dependências externas para a implementação básica
+# O algoritmo usa apenas bibliotecas padrão do Python:
+# - collections (Counter)
+# - random
+# - string
+# - math
+# - typing
+# - pathlib
+
+# Para melhorias futuras (opcional):
+# nltk>=3.8  # Para análise de frequências mais avançada
+# numpy>=1.24.0  # Para cálculos numéricos otimizados
+
