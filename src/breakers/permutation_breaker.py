@@ -1,5 +1,6 @@
 import random
 import math
+import itertools
 from typing import List, Tuple
 
 
@@ -12,25 +13,32 @@ class PermutationBreaker:
         n_cols = len(key)
         n_rows = math.ceil(len(ciphertext) / n_cols)
 
+        sorted_positions = sorted(range(n_cols), key=lambda x: key[x])
+
+        col_lengths = [n_rows] * n_cols
+        remainder = len(ciphertext) % n_cols
+        if remainder != 0:
+            for col in range(remainder, n_cols):
+                col_lengths[col] = n_rows - 1
+
         grid = [[''] * n_cols for _ in range(n_rows)]
 
         idx = 0
-        for col_order in sorted(range(n_cols), key=lambda x: key[x]):
-            for row in range(n_rows):
-                if idx < len(ciphertext):
-                    grid[row][col_order] = ciphertext[idx]
-                    idx += 1
+        for col_pos in sorted_positions:
+            for row in range(col_lengths[col_pos]):
+                grid[row][col_pos] = ciphertext[idx]
+                idx += 1
 
         plaintext = ''.join(''.join(row) for row in grid)
-        return plaintext
+        return plaintext.replace('', '')
 
     def _simulated_annealing(
         self,
         ciphertext: str,
         key_length: int,
-        temperature: float = 20.0,
-        cooling_rate: float = 0.995,
-        iterations: int = 50000
+        temperature: float = 50.0,
+        cooling_rate: float = 0.99,
+        iterations: int = 100000
     ) -> Tuple[List[int], str]:
         key = list(range(key_length))
         random.shuffle(key)
@@ -65,6 +73,39 @@ class PermutationBreaker:
 
         return best_key, best_text
 
+    def _brute_force(self, ciphertext: str, key_length: int) -> Tuple[List[int], str]:
+        best_key = None
+        best_text = None
+        best_score = float('-inf')
+
+        for perm in itertools.permutations(range(key_length)):
+            key = list(perm)
+            text = self._columnar_decrypt(ciphertext, key)
+            score = self.scorer.score(text)
+
+            if score > best_score:
+                best_score = score
+                best_key = key
+                best_text = text
+
+        return best_key, best_text
+
     def break_cipher(self, ciphertext: str, key_length: int) -> Tuple[str, List[int]]:
-        best_key, plaintext = self._simulated_annealing(ciphertext, key_length)
-        return plaintext, best_key
+        if key_length <= 8:
+            key, text = self._brute_force(ciphertext, key_length)
+            return text, key
+
+        best_overall_key = None
+        best_overall_text = None
+        best_overall_score = float('-inf')
+
+        for _ in range(20):
+            key, text = self._simulated_annealing(ciphertext, key_length)
+            score = self.scorer.score(text)
+
+            if score > best_overall_score:
+                best_overall_score = score
+                best_overall_key = key
+                best_overall_text = text
+
+        return best_overall_text, best_overall_key

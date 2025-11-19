@@ -36,10 +36,10 @@ def substitution_encrypt(plaintext: str, mapping: dict[str, str]) -> str:
 
 # Suas frases
 texts = [
-    "BY ENDURANCE WE CONQUER",
-    "BE LIKE WATER",
-    "GODS OF DEATH LOVES APPLES",
-    "SCOOBY DOOBY DOO",
+    "THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG",      # THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
+    "DEFENDTHEEASTWALLOFTHECASTLE",             # DEFEND THE EAST WALL OF THE CASTLE
+    "MEETMEATTHESTATION",                       # MEET ME AT THE STATION
+    "SENDREINFORCEMENTSIMMEDIATELY",            # SEND REINFORCEMENTS IMMEDIATELY
 ]
 
 # Chaves de permutação (tamanho 5)
