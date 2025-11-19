@@ -34,18 +34,22 @@ def substitution_encrypt(plaintext: str, mapping: dict[str, str]) -> str:
     return "".join(result)
 
 
-# Suas frases
-texts = [
-    "THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG",      # THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
-    "DEFENDTHEEASTWALLOFTHECASTLE",             # DEFEND THE EAST WALL OF THE CASTLE
-    "MEETMEATTHESTATION",                       # MEET ME AT THE STATION
-    "SENDREINFORCEMENTSIMMEDIATELY",            # SEND REINFORCEMENTS IMMEDIATELY
+perm_texts = [
+    "THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG",  # THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
+    "DEFENDTHEEASTWALLOFTHECASTLE",  # DEFEND THE EAST WALL OF THE CASTLE
+    "MEETMEATTHESTATION",  # MEET ME AT THE STATION
+    "SENDREINFORCEMENTSIMMEDIATELY",  # SEND REINFORCEMENTS IMMEDIATELY
 ]
 
-# Chaves de permutação (tamanho 5)
+sub_texts = [
+    "THECRYPTOGRAPHYISTHESCIENCEOFPROTECTINGINFORMATIONBYTRANSFORMINGITINTOANUNREADABLEFORMATCALLEDCIPHERTEXTONLYTHOSEWHOPOSSESEACRETKEYCANDECIPHER",
+    "INTHEWORLDOFSECURITYANDPRIVACYENCRYPTIONPLAYSAVITALROLEBYENSURINGTHATDATAREMAINSSAFEFROMUNAUTHORIZEDACCESSEVENIFINTERCEPTEDDURINGTRANSMISSION",
+    "MODERNENCRYPTIONALGORITHMSSUCHASTHERSAMDAESPROVIDESTRONGPROTECTIONAGAINSTBRUTEFORCEATTTACKSMAKINGITPRACTICALLYIMPOSSIBLETOBREAKTHECODE",
+    "CRYPTANALYSISISTHEARTANDSCIENCEOFBREAKINGCIPHERSWITHOUTKNOWINGTHEKEYEXPERTSUSEVARIOUSTECHNIQUESINCLUDINGFREQUENCYANALYSISANDPATTERNRECOGNITION",
+]
+
 perm_keys = [[3, 1, 4, 0, 2], [2, 0, 4, 1, 3], [1, 3, 0, 4, 2], [4, 2, 1, 3, 0]]
 
-# Mapeamentos de substituição
 sub_mappings = [
     {
         "A": "Q",
@@ -161,20 +165,29 @@ sub_mappings = [
     },
 ]
 
-# Gerar permutações
-for i, (text, key) in enumerate(zip(texts, perm_keys), 1):
+print("=" * 80)
+print("GERANDO CIFRAS DE PERMUTAÇÃO")
+print("=" * 80)
+for i, (text, key) in enumerate(zip(perm_texts, perm_keys), 1):
     ciphertext = columnar_encrypt(text, key)
     filename = f"data/ciphertexts/permutation_0{i}.txt"
     with open(filename, "w") as f:
         f.write(ciphertext)
-    print(f"{filename}: {ciphertext}")
-    print(f"  Key: {key}\n")
+    print(f"\n{filename}:")
+    print(f"  Plaintext:  {text[:60]}...")
+    print(f"  Ciphertext: {ciphertext[:60]}...")
+    print(f"  Key: {key}")
 
-# Gerar substituições
-for i, (text, mapping) in enumerate(zip(texts, sub_mappings), 1):
+print("\n" + "=" * 80)
+print("GERANDO CIFRAS DE SUBSTITUIÇÃO")
+print("=" * 80)
+for i, (text, mapping) in enumerate(zip(sub_texts, sub_mappings), 1):
     ciphertext = substitution_encrypt(text, mapping)
     filename = f"data/ciphertexts/substitution_0{i}.txt"
     with open(filename, "w") as f:
         f.write(ciphertext)
-    print(f"{filename}: {ciphertext}")
-    print(f"  Mapping sample: {dict(list(mapping.items())[:10])}\n")
+    print(f"\n{filename}:")
+    print(f"  Plaintext:  {text[:60]}...")
+    print(f"  Ciphertext: {ciphertext[:60]}...")
+    print(f"  Text length: {len(text)} chars")
+    print(f"  Mapping sample: {dict(list(mapping.items())[:5])}...")
