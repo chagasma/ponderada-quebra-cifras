@@ -1,4 +1,5 @@
 # ponderada-quebra-cifras
+
 Ponderada de quebra de cifras da optativa de criptografia. Grupo: Ana Goes, Mauro das Chagas Junior
 
 ## Algoritmo de Quebra de Cifra de Permutação (Columnar Transposition)
@@ -37,6 +38,7 @@ def _columnar_decrypt(self, ciphertext: str, key: List[int]) -> str:
 ```
 
 **Passos:**
+
 - Remove espaços e quebras de linha do texto cifrado
 - Calcula o número de linhas necessárias: `n_rows = ceil(len(ciphertext) / n_cols)`
 - Ordena as posições das colunas de acordo com a chave (colunas menores primeiro)
@@ -44,6 +46,7 @@ def _columnar_decrypt(self, ciphertext: str, key: List[int]) -> str:
 - Lê o texto linha por linha da grade para reconstruir o texto original
 
 **Exemplo visual:**
+
 ```
 Chave: [2, 0, 1] (3 colunas)
 Texto cifrado: "HLOELWRD" (8 caracteres)
@@ -65,6 +68,7 @@ def _brute_force(self, ciphertext: str, key_length: int) -> Tuple[List[int], str
 ```
 
 **Passos:**
+
 - Gera todas as permutações possíveis de `[0, 1, 2, ..., key_length-1]`
 - Para cada permutação, descriptografa o texto e calcula o score
 - Retorna a chave e o texto com maior score
@@ -80,11 +84,13 @@ def _simulated_annealing(self, ciphertext: str, key_length: int, ...) -> Tuple[L
 ```
 
 **Parâmetros:**
+
 - `temperature`: Temperatura inicial (padrão: 50.0)
 - `cooling_rate`: Taxa de resfriamento (padrão: 0.99)
 - `iterations`: Número de iterações (padrão: 100000)
 
 **Algoritmo:**
+
 1. Inicializa uma chave aleatória
 2. Para cada iteração:
    - Troca aleatoriamente dois elementos da chave
@@ -104,6 +110,7 @@ def break_cipher(self, ciphertext: str, key_length: int) -> Tuple[str, List[int]
 ```
 
 **Estratégia:**
+
 - Se `key_length <= 8`: usa força bruta (garante solução ótima)
 - Se `key_length > 8`: executa Simulated Annealing 20 vezes e retorna o melhor resultado (maior probabilidade de encontrar a solução correta)
 
@@ -133,12 +140,14 @@ Vamos quebrar a cifra passo a passo com um exemplo:
 #### Passo 2: Quebra (nosso algoritmo)
 
 **Entrada:**
+
 - Texto cifrado: `"OEHELDLWR"`
 - Comprimento da chave: `3`
 
 **Processo:**
 
 1. **Tentativa com chave [0, 1, 2]:**
+
    ```
    Grade:
    Col 0: O E H
@@ -149,6 +158,7 @@ Vamos quebrar a cifra passo a passo com um exemplo:
    ```
 
 2. **Tentativa com chave [1, 0, 2]:**
+
    ```
    Grade:
    Col 0: E L D
@@ -159,6 +169,7 @@ Vamos quebrar a cifra passo a passo com um exemplo:
    ```
 
 3. **Tentativa com chave [2, 0, 1]:**
+
    ```
    Ordem das colunas: [2, 0, 1]
    Grade:
@@ -175,6 +186,7 @@ Vamos quebrar a cifra passo a passo com um exemplo:
 #### Passo 3: Avaliação com N-gramas
 
 O scorer analisa sequências de 4 caracteres (quadgrams):
+
 - `"HELL"` → frequência alta em inglês → score positivo
 - `"ELLO"` → frequência alta → score positivo  
 - `"WORL"` → frequência alta → score positivo
@@ -218,12 +230,14 @@ def _initial_mapping(self, ciphertext: str) -> Dict[str, str]:
 ```
 
 **Passos:**
+
 - Conta a frequência de cada letra no texto cifrado
 - Ordena as letras do texto cifrado por frequência (mais frequente primeiro)
 - Mapeia cada letra cifrada para a letra correspondente na ordem de frequência do inglês
 - Para letras não encontradas no texto, atribui mapeamentos aleatórios disponíveis
 
 **Exemplo:**
+
 ```
 Texto cifrado: "XBMF XBMF" (onde X é mais frequente que B, M, F)
 Ordem de frequência do inglês: "ETAOINSHRDLCUMWFGYPBVKJXQZ"
@@ -244,12 +258,14 @@ def _decrypt(self, ciphertext: str, mapping: Dict[str, str]) -> str:
 ```
 
 **Passos:**
+
 - Para cada caractere no texto cifrado:
   - Se for uma letra, substitui pelo valor do mapeamento
   - Se não for letra (espaços, pontuação), mantém inalterado
 - Retorna o texto descriptografado
 
 **Exemplo:**
+
 ```
 Texto cifrado: "XBMF"
 Mapeamento: {'X': 'H', 'B': 'E', 'M': 'L', 'F': 'O'}
@@ -265,6 +281,7 @@ def _hill_climb(self, ciphertext: str, mapping: Dict[str, str], iterations: int 
 ```
 
 **Algoritmo:**
+
 1. Inicializa o melhor mapeamento com o mapeamento fornecido
 2. Para cada iteração (padrão: 10.000):
    - Seleciona aleatoriamente duas letras do alfabeto (ex: 'A' e 'B')
@@ -286,6 +303,7 @@ def break_cipher(self, ciphertext: str, iterations: int = 50000, num_restarts: i
 ```
 
 **Estratégia:**
+
 1. **Primeira tentativa com mapeamento baseado em frequências:**
    - Cria mapeamento inicial usando `_initial_mapping`
    - Otimiza com hill climbing
@@ -327,6 +345,7 @@ Texto cifrado: "XBMFM FQPMK"
 #### Passo 2: Análise de Frequências Inicial
 
 **Frequências no texto cifrado:**
+
 ```
 M: 3 ocorrências (30%)
 B: 1 ocorrência (10%)
@@ -356,6 +375,7 @@ K → S
 ```
 
 **Tentativa de descriptografia:**
+
 ```
 Texto cifrado: "XBMFM FQPMK"
 Aplicando mapeamento inicial:
@@ -373,18 +393,21 @@ Resultado: "OAEET ITNES" → Score: -8.3 (baixo, não faz sentido)
 #### Passo 4: Otimização com Hill Climbing
 
 **Iteração 1:**
+
 - Troca: M ↔ F (M→E vira M→T, F→T vira F→E)
 - Novo mapeamento: `{..., 'M': 'T', 'F': 'E', ...}`
 - Texto: "OAEET ETNES" → Score: -7.1 (melhorou!)
 - **Aceita a troca**
 
 **Iteração 2:**
+
 - Troca: B ↔ X (B→A vira B→O, X→O vira X→A)
 - Novo mapeamento: `{..., 'B': 'O', 'X': 'A', ...}`
 - Texto: "OAEET ETNES" → Score: -7.5 (piorou)
 - **Rejeita a troca** (reverte)
 
 **Iteração 3:**
+
 - Troca: X ↔ M (X→O vira X→T, M→T vira M→O)
 - Novo mapeamento: `{..., 'X': 'T', 'M': 'O', ...}`
 - Texto: "OAEET ETNES" → Score: -6.8 (melhorou!)
@@ -393,6 +416,7 @@ Resultado: "OAEET ITNES" → Score: -8.3 (baixo, não faz sentido)
 **... (continua por 10.000 iterações) ...**
 
 **Após otimização:**
+
 ```
 Mapeamento otimizado:
 X → H
@@ -421,6 +445,7 @@ O melhor resultado encontrado (Score: 12.4) é retornado.
 #### Passo 6: Avaliação com N-gramas
 
 O scorer analisa sequências de 4 caracteres (quadgrams) no texto descriptografado:
+
 - `"HELL"` → frequência muito alta em inglês → score muito positivo
 - `"ELLO"` → frequência alta → score positivo
 - `"WORL"` → frequência alta → score positivo
