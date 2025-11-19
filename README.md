@@ -181,3 +181,263 @@ O scorer analisa sequências de 4 caracteres (quadgrams):
 - `"ORLD"` → frequência alta → score positivo
 
 Textos com n-gramas comuns do idioma recebem scores maiores, indicando que estão mais próximos do texto original.
+
+## Algoritmo de Quebra de Cifra de Substituição (Monoalfabética)
+
+### Visão Geral
+
+O algoritmo de quebra de cifra de substituição implementado neste projeto quebra cifras de substituição monoalfabéticas, onde cada letra do alfabeto é substituída por outra letra de forma consistente. Este tipo de cifra mantém a estrutura do texto original, apenas trocando os caracteres.
+
+### Como é Realizada a Quebra
+
+A quebra da cifra segue os seguintes passos:
+
+1. **Análise de Frequências Inicial**: O algoritmo calcula a frequência de cada letra no texto cifrado e compara com as frequências esperadas do idioma inglês.
+
+2. **Criação do Mapeamento Inicial**: Cria um mapeamento inicial onde as letras mais frequentes do texto cifrado são mapeadas para as letras mais frequentes do inglês (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z).
+
+3. **Otimização com Hill Climbing**: Melhora o mapeamento inicial usando a técnica de hill climbing:
+   - Testa trocas de pares de letras no mapeamento
+   - Se o score melhorar, aceita a troca
+   - Repete o processo por milhares de iterações
+
+4. **Múltiplos Restarts**: Para evitar ficar preso em mínimos locais, o algoritmo executa múltiplas tentativas (padrão: 10) com diferentes mapeamentos iniciais aleatórios.
+
+5. **Avaliação da Qualidade**: Cada tentativa é avaliada usando um scorer baseado em n-gramas (quadgrams), que calcula a probabilidade do texto decifrado ser inglês válido.
+
+6. **Seleção da Melhor Solução**: O mapeamento que produz o texto com maior score é retornado como resultado.
+
+### Lógica do Código
+
+#### 1. Função `_initial_mapping(ciphertext)`
+
+Cria um mapeamento inicial baseado em análise de frequências:
+
+```python
+def _initial_mapping(self, ciphertext: str) -> Dict[str, str]:
+```
+
+**Passos:**
+- Conta a frequência de cada letra no texto cifrado
+- Ordena as letras do texto cifrado por frequência (mais frequente primeiro)
+- Mapeia cada letra cifrada para a letra correspondente na ordem de frequência do inglês
+- Para letras não encontradas no texto, atribui mapeamentos aleatórios disponíveis
+
+**Exemplo:**
+```
+Texto cifrado: "XBMF XBMF" (onde X é mais frequente que B, M, F)
+Ordem de frequência do inglês: "ETAOINSHRDLCUMWFGYPBVKJXQZ"
+
+Mapeamento inicial:
+X → E (mais frequente no cifrado → mais frequente no inglês)
+B → T
+M → A
+F → O
+```
+
+#### 2. Função `_decrypt(ciphertext, mapping)`
+
+Aplica o mapeamento para descriptografar o texto:
+
+```python
+def _decrypt(self, ciphertext: str, mapping: Dict[str, str]) -> str:
+```
+
+**Passos:**
+- Para cada caractere no texto cifrado:
+  - Se for uma letra, substitui pelo valor do mapeamento
+  - Se não for letra (espaços, pontuação), mantém inalterado
+- Retorna o texto descriptografado
+
+**Exemplo:**
+```
+Texto cifrado: "XBMF"
+Mapeamento: {'X': 'H', 'B': 'E', 'M': 'L', 'F': 'O'}
+Resultado: "HELO"
+```
+
+#### 3. Função `_hill_climb(ciphertext, mapping, iterations)`
+
+Otimiza o mapeamento usando hill climbing:
+
+```python
+def _hill_climb(self, ciphertext: str, mapping: Dict[str, str], iterations: int = 10000) -> Tuple[Dict[str, str], str]:
+```
+
+**Algoritmo:**
+1. Inicializa o melhor mapeamento com o mapeamento fornecido
+2. Para cada iteração (padrão: 10.000):
+   - Seleciona aleatoriamente duas letras do alfabeto (ex: 'A' e 'B')
+   - Troca seus valores no mapeamento (se A→X e B→Y, vira A→Y e B→X)
+   - Descriptografa o texto com o novo mapeamento
+   - Calcula o score do texto descriptografado
+   - Se o score melhorou, mantém a troca e atualiza o melhor mapeamento
+   - Se o score piorou, desfaz a troca (reverte para o estado anterior)
+3. Retorna o melhor mapeamento encontrado e o texto descriptografado
+
+**Por que funciona:** O hill climbing explora o espaço de soluções fazendo pequenas modificações (trocas de pares) e mantendo apenas as que melhoram o resultado. Isso permite refinar gradualmente o mapeamento inicial baseado em frequências.
+
+#### 4. Função `break_cipher(ciphertext, iterations, num_restarts)`
+
+Função principal que orquestra a quebra:
+
+```python
+def break_cipher(self, ciphertext: str, iterations: int = 50000, num_restarts: int = 10) -> Tuple[str, Dict[str, str]]:
+```
+
+**Estratégia:**
+1. **Primeira tentativa com mapeamento baseado em frequências:**
+   - Cria mapeamento inicial usando `_initial_mapping`
+   - Otimiza com hill climbing
+   - Armazena como melhor resultado inicial
+
+2. **Múltiplos restarts (padrão: 9 tentativas adicionais):**
+   - Para cada restart:
+     - Cria um mapeamento completamente aleatório
+     - Otimiza com hill climbing
+     - Se o resultado for melhor que o atual, atualiza o melhor resultado
+
+3. **Retorno:** Retorna o melhor texto descriptografado e o melhor mapeamento encontrado
+
+**Por que múltiplos restarts:** O hill climbing pode ficar preso em mínimos locais (soluções boas, mas não ótimas). Executar múltiplas tentativas com diferentes pontos de partida aumenta significativamente a chance de encontrar a solução correta.
+
+### Exemplo Simples
+
+Vamos quebrar a cifra passo a passo com um exemplo:
+
+**Texto original:** `"HELLO WORLD"`  
+**Mapeamento usado na cifragem:** `{'H': 'X', 'E': 'B', 'L': 'M', 'O': 'F', 'W': 'Q', 'R': 'P', 'D': 'K'}`
+
+#### Passo 1: Cifragem (como o texto foi cifrado originalmente)
+
+```
+Texto original: "HELLO WORLD"
+Aplicando mapeamento:
+H → X
+E → B
+L → M
+O → F
+W → Q
+R → P
+D → K
+
+Texto cifrado: "XBMFM FQPMK"
+```
+
+#### Passo 2: Análise de Frequências Inicial
+
+**Frequências no texto cifrado:**
+```
+M: 3 ocorrências (30%)
+B: 1 ocorrência (10%)
+F: 2 ocorrências (20%)
+X: 1 ocorrência (10%)
+Q: 1 ocorrência (10%)
+P: 1 ocorrência (10%)
+K: 1 ocorrência (10%)
+```
+
+**Ordem de frequência no cifrado:** `M, F, B, X, Q, P, K, ...`
+
+**Ordem de frequência no inglês:** `E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z`
+
+#### Passo 3: Criação do Mapeamento Inicial
+
+```
+Mapeamento baseado em frequências:
+M → E (mais frequente no cifrado → mais frequente no inglês)
+F → T
+B → A
+X → O
+Q → I
+P → N
+K → S
+...
+```
+
+**Tentativa de descriptografia:**
+```
+Texto cifrado: "XBMFM FQPMK"
+Aplicando mapeamento inicial:
+X → O
+B → A
+M → E
+F → T
+Q → I
+P → N
+K → S
+
+Resultado: "OAEET ITNES" → Score: -8.3 (baixo, não faz sentido)
+```
+
+#### Passo 4: Otimização com Hill Climbing
+
+**Iteração 1:**
+- Troca: M ↔ F (M→E vira M→T, F→T vira F→E)
+- Novo mapeamento: `{..., 'M': 'T', 'F': 'E', ...}`
+- Texto: "OAEET ETNES" → Score: -7.1 (melhorou!)
+- **Aceita a troca**
+
+**Iteração 2:**
+- Troca: B ↔ X (B→A vira B→O, X→O vira X→A)
+- Novo mapeamento: `{..., 'B': 'O', 'X': 'A', ...}`
+- Texto: "OAEET ETNES" → Score: -7.5 (piorou)
+- **Rejeita a troca** (reverte)
+
+**Iteração 3:**
+- Troca: X ↔ M (X→O vira X→T, M→T vira M→O)
+- Novo mapeamento: `{..., 'X': 'T', 'M': 'O', ...}`
+- Texto: "OAEET ETNES" → Score: -6.8 (melhorou!)
+- **Aceita a troca**
+
+**... (continua por 10.000 iterações) ...**
+
+**Após otimização:**
+```
+Mapeamento otimizado:
+X → H
+B → E
+M → L
+F → O
+Q → W
+P → R
+K → D
+...
+```
+
+**Resultado:** "HELLO WORLD" → Score: 12.4 (alto! Texto válido em inglês)
+
+#### Passo 5: Múltiplos Restarts
+
+O algoritmo executa mais 9 tentativas com mapeamentos iniciais aleatórios:
+
+- **Restart 1:** Mapeamento aleatório → Hill climbing → Score: 8.2
+- **Restart 2:** Mapeamento aleatório → Hill climbing → Score: 5.1
+- **Restart 3:** Mapeamento aleatório → Hill climbing → Score: 12.4 (igual ao melhor!)
+- **... (continua até 10 tentativas no total) ...**
+
+O melhor resultado encontrado (Score: 12.4) é retornado.
+
+#### Passo 6: Avaliação com N-gramas
+
+O scorer analisa sequências de 4 caracteres (quadgrams) no texto descriptografado:
+- `"HELL"` → frequência muito alta em inglês → score muito positivo
+- `"ELLO"` → frequência alta → score positivo
+- `"WORL"` → frequência alta → score positivo
+- `"ORLD"` → frequência alta → score positivo
+
+Textos com n-gramas comuns do idioma recebem scores maiores, confirmando que a descriptografia está correta.
+
+### Comparação: Mapeamento Inicial vs. Otimizado
+
+| Letra Cifrada | Mapeamento Inicial (Freq) | Mapeamento Otimizado (Hill Climb) | Correto |
+|---------------|---------------------------|-----------------------------------|---------|
+| X             | O                         | H                                 | ✓       |
+| B             | A                         | E                                 | ✓       |
+| M             | E                         | L                                 | ✓       |
+| F             | T                         | O                                 | ✓       |
+| Q             | I                         | W                                 | ✓       |
+| P             | N                         | R                                 | ✓       |
+| K             | S                         | D                                 | ✓       |
+
+O mapeamento inicial baseado apenas em frequências acerta algumas letras, mas o hill climbing refina e corrige os erros, chegando ao mapeamento completo e correto.
