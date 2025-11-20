@@ -1,6 +1,6 @@
 """
-Análise de frequências para quebra de cifras de substituição.
-Utiliza frequências de caracteres calculadas a partir de arquivo CSV de unigramas.
+Frequency analysis for breaking substitution ciphers.
+Uses character frequencies calculated from unigram CSV file.
 """
 
 import string
@@ -13,11 +13,11 @@ import math
 
 class FrequencyAnalyzer:
     """
-    Analisador de frequências para cifras de substituição monoalfabéticas.
-    Calcula frequências de caracteres a partir de arquivo CSV de unigramas.
+    Frequency analyzer for monoalphabetic substitution ciphers.
+    Calculates character frequencies from unigram CSV file.
     """
-    
-    # Valores padrão (fallback se CSV não for encontrado)
+
+    # Default values (fallback if CSV is not found)
     DEFAULT_CHAR_FREQUENCIES = {
         'E': 12.70, 'T': 9.06, 'A': 8.17, 'O': 7.51, 'I': 6.97,
         'N': 6.75, 'S': 6.33, 'H': 6.09, 'R': 5.99, 'D': 4.25,
@@ -30,57 +30,56 @@ class FrequencyAnalyzer:
     
     def __init__(self, unigram_csv_file: Optional[str] = None):
         """
-        Inicializa o analisador de frequências.
-        
+        Initialize the frequency analyzer.
+
         Args:
-            unigram_csv_file: Caminho para arquivo CSV com frequências de unigramas.
-                            Se None, tenta carregar de data/unigram_freq.csv
+            unigram_csv_file: Path to CSV file with unigram frequencies.
+                            If None, tries to load from data/unigram_freq.csv
         """
         self.alphabet = string.ascii_uppercase
-        
-        # Define caminho padrão
+
+        # Set default path
         if unigram_csv_file is None:
             current_file = Path(__file__)
             project_root = current_file.parent.parent.parent
             unigram_csv_file = project_root / "data" / "unigram_freq.csv"
         else:
             unigram_csv_file = Path(unigram_csv_file)
-        
-        # Carrega frequências de caracteres do CSV
+
+        # Load character frequencies from CSV
         self.char_frequencies, self.freq_order = self._load_char_frequencies_from_csv(
             unigram_csv_file
         )
     
     def _load_char_frequencies_from_csv(
-        self, 
+        self,
         csv_file: Path
     ) -> Tuple[Dict[str, float], str]:
         """
-        Carrega frequências de caracteres calculadas a partir de CSV de unigramas.
-        
-        O CSV contém palavras e suas frequências. Calculamos a frequência de cada
-        letra somando as ocorrências em todas as palavras, ponderadas pela frequência
-        de cada palavra.
-        
+        Load character frequencies calculated from unigram CSV.
+
+        The CSV contains words and their frequencies. We calculate the frequency of each
+        letter by summing occurrences across all words, weighted by word frequency.
+
         Args:
-            csv_file: Caminho para arquivo CSV (formato: word,count)
-            
+            csv_file: Path to CSV file (format: word,count)
+
         Returns:
-            Tupla (dicionário de frequências, ordem de frequência)
+            Tuple of (frequency dictionary, frequency order string)
         """
         if not csv_file.exists():
             print(
-                f"Aviso: Arquivo CSV não encontrado: {csv_file}\n"
-                f"Usando valores padrão."
+                f"Warning: CSV file not found: {csv_file}\n"
+                f"Using default values."
             )
             return self.DEFAULT_CHAR_FREQUENCIES.copy(), self.DEFAULT_FREQ_ORDER
         
         try:
             char_counter = Counter()
             total_char_count = 0
-            
-            print(f"Carregando frequências de caracteres de: {csv_file}")
-            print("Processando arquivo CSV (isso pode levar alguns segundos)...")
+
+            print(f"Loading character frequencies from: {csv_file}")
+            print("Processing CSV file (this may take a few seconds)...")
             
             with open(csv_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
@@ -92,8 +91,8 @@ class FrequencyAnalyzer:
                         count = int(row.get('count', 0))
                     except (ValueError, TypeError):
                         continue
-                    
-                    # Conta cada letra na palavra, ponderada pela frequência da palavra
+
+                    # Count each letter in the word, weighted by word frequency
                     for char in word:
                         if char.isalpha() and char in self.alphabet:
                             char_counter[char] += count
@@ -101,46 +100,46 @@ class FrequencyAnalyzer:
                     
                     processed += 1
                     if processed % 50000 == 0:
-                        print(f"  Processadas {processed} palavras...")
-            
-            print(f"Processadas {processed} palavras")
-            print(f"Total de caracteres contados: {total_char_count:,}")
-            
-            # Calcula frequências percentuais
+                        print(f"  Processed {processed} words...")
+
+            print(f"Processed {processed} words")
+            print(f"Total characters counted: {total_char_count:,}")
+
+            # Calculate percentage frequencies
             frequencies = {}
             for char in self.alphabet:
                 count = char_counter.get(char, 0)
                 frequencies[char] = (count / total_char_count * 100.0) if total_char_count > 0 else 0.0
-            
-            # Ordena por frequência
+
+            # Sort by frequency
             sorted_freq = sorted(
                 frequencies.items(),
                 key=lambda x: x[1],
                 reverse=True
             )
             freq_order = ''.join(char for char, _ in sorted_freq)
-            
-            print(f"Frequencias calculadas. Ordem: {freq_order}")
-            print(f"  Letra mais frequente: {freq_order[0]} ({frequencies[freq_order[0]]:.2f}%)")
+
+            print(f"Frequencies calculated. Order: {freq_order}")
+            print(f"  Most frequent letter: {freq_order[0]} ({frequencies[freq_order[0]]:.2f}%)")
             
             return frequencies, freq_order
             
         except Exception as e:
             print(
-                f"Erro ao carregar CSV {csv_file}: {e}\n"
-                f"Usando valores padrão."
+                f"Error loading CSV {csv_file}: {e}\n"
+                f"Using default values."
             )
             return self.DEFAULT_CHAR_FREQUENCIES.copy(), self.DEFAULT_FREQ_ORDER
     
     def calculate_char_frequencies(self, text: str) -> Dict[str, float]:
         """
-        Calcula frequências de caracteres no texto.
-        
+        Calculate character frequencies in the text.
+
         Args:
-            text: Texto para análise
-            
+            text: Text to analyze
+
         Returns:
-            Dicionário com frequências percentuais de cada letra
+            Dictionary with percentage frequencies of each letter
         """
         text_upper = text.upper()
         letters_only = [c for c in text_upper if c.isalpha()]
@@ -160,17 +159,17 @@ class FrequencyAnalyzer:
     
     def calculate_index_of_coincidence(self, text: str) -> float:
         """
-        Calcula o Índice de Coincidência (IC) do texto.
-        
-        O IC mede a probabilidade de duas letras aleatórias serem iguais.
-        Para inglês: ~0.0667
-        Para texto aleatório: ~0.0385
-        
+        Calculate the Index of Coincidence (IC) of the text.
+
+        IC measures the probability that two random letters are the same.
+        For English: ~0.0667
+        For random text: ~0.0385
+
         Args:
-            text: Texto para análise
-            
+            text: Text to analyze
+
         Returns:
-            Índice de coincidência (0.0 a 1.0)
+            Index of coincidence (0.0 to 1.0)
         """
         text_upper = text.upper()
         letters_only = [c for c in text_upper if c.isalpha()]
@@ -249,13 +248,13 @@ class FrequencyAnalyzer:
     
     def analyze_bigrams(self, text: str) -> Dict[str, int]:
         """
-        Analisa bigramas no texto.
-        
+        Analyze bigrams in the text.
+
         Args:
-            text: Texto para análise
-            
+            text: Text to analyze
+
         Returns:
-            Dicionário com contagem de bigramas
+            Dictionary with bigram counts
         """
         text_upper = text.upper()
         letters_only = ''.join(c for c in text_upper if c.isalpha())
@@ -269,13 +268,13 @@ class FrequencyAnalyzer:
     
     def analyze_trigrams(self, text: str) -> Dict[str, int]:
         """
-        Analisa trigramas no texto.
-        
+        Analyze trigrams in the text.
+
         Args:
-            text: Texto para análise
-            
+            text: Text to analyze
+
         Returns:
-            Dicionário com contagem de trigramas
+            Dictionary with trigram counts
         """
         text_upper = text.upper()
         letters_only = ''.join(c for c in text_upper if c.isalpha())
@@ -288,21 +287,21 @@ class FrequencyAnalyzer:
         return trigrams
     
     def calculate_chi_squared(
-        self, 
-        text: str, 
+        self,
+        text: str,
         mapping: Dict[str, str]
     ) -> float:
         """
-        Calcula chi-quadrado para avaliar qualidade do mapeamento.
-        
-        Compara frequências observadas com frequências esperadas do inglês.
-        
+        Calculate chi-squared to evaluate mapping quality.
+
+        Compares observed frequencies with expected English frequencies.
+
         Args:
-            text: Texto decifrado
-            mapping: Mapeamento usado
-            
+            text: Decrypted text
+            mapping: Mapping used
+
         Returns:
-            Valor do chi-quadrado (menor é melhor)
+            Chi-squared value (lower is better)
         """
         frequencies = self.calculate_char_frequencies(text)
         chi_squared = 0.0
